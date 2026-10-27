@@ -33,6 +33,10 @@ class ToolRegistry:
         """移除工具；不存在时保持幂等。"""
         self._tools.pop(name, None)
 
+    def registered(self, name: str) -> Tool | None:
+        """宿主检查注册对象（含暂不可用项）；不用于执行或向模型提供定义。"""
+        return self._tools.get(name)
+
     def get(self, name: str) -> Tool:
         """按精确名称查找工具。"""
         try:

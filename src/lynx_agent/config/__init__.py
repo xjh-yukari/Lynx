@@ -28,6 +28,7 @@ from lynx_agent.config.schema import (
     WebFetchConfig,
     WebSearchConfig,
 )
+from lynx_agent.training.config import TrainingConfig
 
 __all__ = [
     "AgentConfig",
@@ -43,6 +44,7 @@ __all__ = [
     "ReplyRewriteConfig",
     "ToolExecutionConfig",
     "ToolResultPruningConfig",
+    "TrainingConfig",
     "WebConfig",
     "WebFetchConfig",
     "WebSearchConfig",

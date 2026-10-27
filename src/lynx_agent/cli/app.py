@@ -555,6 +555,9 @@ class LynxTUI:
         elif verb == "/mcp":
             self.state.status = "正在处理 MCP 连接…"
             self.notice(await self.runner.mcp.command(argument))
+        elif verb == "/training":
+            self.state.status = "正在处理训练基础查询…"
+            self.notice(await self.runner.training_command(argument))
         elif verb in {"/memory", "/profile"}:
             self.state.status = "正在处理长期记忆…"
             self.notice(await self.runner.memory_command(verb, argument))

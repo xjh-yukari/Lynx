@@ -3,6 +3,13 @@
 # 密钥继续放在 .env；MODEL_* 和 DEEPSEEK_MODEL 环境配置优先于当前预设。
 model_preset = "daily"
 
+# 训练助手M1默认关闭：仅发现和台账，尚不提交训练。
+[training]
+enabled = false
+distribution = "Ubuntu-24.04"
+root = "~/lynx-training"
+rpc_timeout_seconds = 20
+
 # 分级审批（应用层权限与审批，不是操作系统沙箱）。
 # 默认：文件权限“工作区修改” + 审批“常用操作自动”。
 # mode = "ask" 每次询问；"auto" 常用操作自动；"paused" 暂停执行（可分析/预览）。

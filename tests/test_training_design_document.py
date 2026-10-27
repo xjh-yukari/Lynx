@@ -67,6 +67,6 @@ def test_design_traces_all_first_release_requirements():
     text = document()
     for number in range(1, 13):
         assert re.search(rf"^\| F{number:02d} \|", text, re.MULTILINE)
-    assert "技术设计稿，尚未实现" in text
+    assert "技术设计稿，完整方案尚未实现" in text
     assert "本轮尝试联网重取失败" in text
-    assert "不创建worker包、训练目录、数据库或unit" in text
+    assert "完整训练服务、暂停和续训仍待开发" in text

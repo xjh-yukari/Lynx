@@ -50,6 +50,8 @@ from lynx_agent.tools.builtin.filesystem import FileTool
 from lynx_agent.tools.builtin.shell import ExecCommandTool
 from lynx_agent.tools.builtin.tool_results import ReadToolResultTool
 from lynx_agent.tools.errors import ToolRegistrationError
+from lynx_agent.training.service import TrainingService
+from lynx_agent.training.tools import TrainingReadTool, training_tools
 
 
 def _restored_history(session):
@@ -134,6 +136,15 @@ class AgentRunner:
                     self.tools.register(tool)
                 except ToolRegistrationError:
                     pass
+        self.training = TrainingService(config.training, writable=lambda: (
+            self.file_access is not None and self.file_access.policy.writable
+            and self.approval is not None and self.approval.writable),
+            secrets=known_secrets(config) if config.training.enabled else ())
+        for tool in training_tools(self.training):
+            previous = self.tools.registered(tool.name)
+            if isinstance(previous, TrainingReadTool):
+                self.tools.unregister(tool.name)
+            self.tools.register(tool)
         self.memory = MemoryService(config.memory, get_home_path() / "memory",
             self.file_access.policy.root if self.file_access else get_project_root(),
             lambda: self.file_access.policy.mode if self.file_access else "workspace")
@@ -860,6 +871,16 @@ class AgentRunner:
             return await handle_memory_command(self.memory, verb, argument)
         finally:
             self._apply_memory()
+            self._operation_running = False
+
+    async def training_command(self, argument):
+        if self._closed or self._operation_running:
+            raise ValueError("请先结束当前请求，再操作训练助手")
+        self._operation_running = True
+        try:
+            self.training.secrets = known_secrets(self._config)
+            return await self.training.command(argument)
+        finally:
             self._operation_running = False
 
     async def __aexit__(

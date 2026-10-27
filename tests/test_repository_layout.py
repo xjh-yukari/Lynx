@@ -46,6 +46,7 @@ def test_rag_sample_plans_reference_existing_fixtures():
     "README.md", "docs/product-plan.md", "tests/README.md", "services/document_rag/README.md",
     "docs/training-assistant-requirements.md",
     "docs/training-assistant-technical-design.md",
+    "services/training_worker/README.md", "tests/plans/training-onboarding.md",
 ])
 def test_maintenance_document_links_exist(relative):
     path = ROOT / relative
@@ -97,10 +98,10 @@ def test_training_requirements_keep_confirmed_decisions_and_draft_status():
     }.items():
         row = next(line for line in requirements.splitlines() if line.startswith(f"| {decision} "))
         assert expected in row
-    assert "需求讨论稿，尚未实现" in requirements
+    assert "M1基础能力已实现，完整训练闭环尚未实现" in requirements
     assert "代码回滚不自动回滚 SQLite" in requirements
     assert "不构成启动训练" in requirements
-    assert "没有读取训练源码" in requirements
+    assert "没有读取用户尚未提供的真实训练源码" in requirements
 
 
 def test_training_requirements_index_tools_and_release_gates():

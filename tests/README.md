@@ -22,6 +22,7 @@ tests/
 | `uv run python tests/manual/demo_compaction.py` | 临时会话、模拟摘要；不证明真实摘要质量 |
 | `uv run python tests/manual/demo_tui.py --tools` | 离线TUI与计算器演示，临时目录，不读真实密钥 |
 | `uv run python tests/manual/tui_preview.py` | 打印真实布局纯函数输出，不启动交互界面 |
+| `uv run python tests/manual/check_training_foundation.py` | 临时M1项目/SQLite冒烟，不执行训练源码、不调用模型/GPU |
 | `uv run python tests/manual/check_memory.py` | 连接真实Engram，不调模型；首次可能创建数据库/运行元数据 |
 | `uv run python tests/manual/engram_probe.py E:/github/lynx_agent_data/bin/engram/3.4.0/engram.exe` | 临时目录验证真实Engram协议，向临时库写测试记录 |
 | `uv run python tests/manual/check_web.py --search "Python official documentation"` | 真联网，搜索服务可能计费，不调用模型 |
@@ -69,3 +70,5 @@ Remove-Item Env:LYNX_PRESSURE_TEST
 移动语料没有自动重建Milvus。旧报告、旧索引中的来源路径是历史快照，不回写伪造；下一次正式建库使用已更新的 `E:\github\lynx_agent_data\rag\import.json`。
 
 审批、长期记忆、文档检索详细方案分别见 `plans/approval-test-plan.md`、`plans/long-term-memory.md`、`plans/document-rag.md`。产品能力与安全边界统一见 [产品方案](../docs/product-plan.md)。
+
+训练助手自动测试：`uv run --locked pytest tests/training -q`；worker标准库源码额外检查：`uv run --locked ruff check services/training_worker`。真实WSL临时冒烟及后续GPU门禁见[接入计划](plans/training-onboarding.md)和[worker说明](../services/training_worker/README.md)，没有默认真实训练测试。

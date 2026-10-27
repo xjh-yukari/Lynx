@@ -24,9 +24,11 @@ from lynx_agent.execution.config import ExecutionConfig
 from lynx_agent.knowledge.models import KnowledgeConfig
 from lynx_agent.mcp.config import MCPConfig
 from lynx_agent.memory.config import MemoryConfig
+from lynx_agent.training.config import TrainingConfig
 
 
 class PresetFile(ConfigModel):
+    training: TrainingConfig = Field(default_factory=TrainingConfig)
     execution: ExecutionConfig = Field(default_factory=ExecutionConfig)
     approval: ApprovalConfig = Field(default_factory=ApprovalConfig)
     knowledge: KnowledgeConfig = Field(default_factory=KnowledgeConfig)
@@ -222,6 +224,7 @@ def _build_config_data(values: Mapping[str, str], presets: PresetFile | None = N
         "memory": presets.memory,
         "knowledge": presets.knowledge,
         "execution": presets.execution,
+        "training": presets.training,
         "approval": {
             **presets.approval.model_dump(),
             **({"mode": values["APPROVAL_MODE"]} if "APPROVAL_MODE" in values else {}),

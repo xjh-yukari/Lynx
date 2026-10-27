@@ -34,8 +34,9 @@ uv run python scripts\rag_runtime.py agent
 - [测试、人工调试与测试资料](tests/README.md)
 - [独立RAG组件](services/document_rag/README.md)
 - [agent-bench评测包](bench/README.md)
-- [训练工程助手需求讨论稿（尚未实现）](docs/training-assistant-requirements.md)
-- [训练工程助手技术设计（尚未实现）](docs/training-assistant-technical-design.md)
+- [训练工程助手需求（M1已实现，完整闭环待开发）](docs/training-assistant-requirements.md)
+- [训练工程助手技术设计](docs/training-assistant-technical-design.md)
+- [训练助手M1使用与边界](services/training_worker/README.md)
 
 ```powershell
 uv run --locked pytest -q

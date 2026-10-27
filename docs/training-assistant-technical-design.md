@@ -2,7 +2,9 @@
 
 文档版本：0.1。日期：2026-10-27。需求基线：[训练工程助手需求 v0.3](training-assistant-requirements.md)。
 
-实施状态：技术设计稿，尚未实现。示例接口、配置、SQL 和命令均为待实现契约，不是当前可执行功能或部署指令。本文不授权安装服务、启动训练、迁移数据或修改正在运行的实验；不移动 V1.0.0 标签。
+实施状态：技术设计稿，完整方案尚未实现。已实现M1发现/人工台账，目标架构中的持久调度、审批凭据及暂停续训尚未实现。下文服务接口、19表SQL和生产配置仍为目标契约，不是当前部署指令。本文不授权安装服务、启动训练、迁移数据或修改正在运行的实验；不移动 V1.0.0 标签。
+
+M1采用标准库bootstrap短请求和4张前缀隔离的台账表（registry_meta、training_projects、imported_experiments、imported_metrics），不是下文19表生产schema；SQLite使用短事务，不是已部署的WAL单写者服务。M1协议和目标服务协议入口/形状不同，升级时必须显式版本协商与兼容迁移，不能把现有客户端直接指向不兼容服务。生产迁移前需一致性备份和保留人工记录。当前部署与限制见[产品方案](product-plan.md)和[worker说明](../services/training_worker/README.md)。
 
 ## 1. 设计目标与关键决策
 
@@ -479,4 +481,4 @@ WSL测试显式开关，检查跨系统参数/路径、用户服务、关闭TUI�
 - [SQLite WAL约束](https://www.sqlite.org/wal.html)与[在线备份](https://www.sqlite.org/backup.html)。
 - [Transformers callback接口](https://huggingface.co/docs/transformers/main_classes/callback)与[checkpoint恢复](https://huggingface.co/docs/transformers/trainer_recipes)。
 
-当前交付只新增技术文档与文档契约测试，不创建worker包、训练目录、数据库或unit，不提交凭据；当前已交付功能仍以[产品方案](product-plan.md)为准。
+当前已实现的M1只在显式确认后创建人工台账；环境查询与测试不创建正式运行库，不创建生产任务或unit，不提交凭据。完整训练服务、暂停和续训仍待开发；当前已交付功能以[产品方案](product-plan.md)为准。

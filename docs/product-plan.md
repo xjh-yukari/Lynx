@@ -337,6 +337,20 @@ uv run python tests\manual\demo_tui.py --tools
 
 ## 17. 已知限制与后续边界
 
+### 训练工程助手 M1（新增基础能力）
+
+已实现 Windows→WSL 的短请求桥、环境/GPU只读探测、用户显式注册项目、静态发现SFT/GRPO候选入口、本地SQLite人工实验台账、有限数值差计算与接入计划。默认关闭，`/training on confirm`在当前运行期开启；不会修改本地配置，不依赖模型API完成这些命令。
+
+`/training environment`查看环境；`projects`列已注册项目；`register <WSL源码绝对路径> confirm`授权该目录用于静态发现；`inspect <项目ID>`查看候选与证据；`plan <项目ID>`给出不可执行的接入计划；`records <项目ID>`查询人工台账；`record <项目ID> <sft/grpo/other> <协议名> <指标=数值>... confirm`登记；`compare <项目ID> <基线实验ID> <候选实验ID>`仅在协议名相同时计算共有指标差值。路径有空格需引号；M1注册暂只接受Linux绝对路径，不猜测Windows路径映射。
+
+模型可用training_inspect/status/records/plan/compare五个只读工具；不能自行注册目录、保存指标、提交或控制任务。项目注册与人工登记写入要求文件权限可写、审批不为paused；真实终端的confirm命令是本阶段批准入口。读取仅限显式登记项目，未注册目录不会被扫描。
+
+默认台账为WSL的`~/lynx-training/registry/experiments.sqlite3`，只有确认注册/登记才建库，环境与空列表查询不创建运行数据。人工记录始终标记user_reported_unverified，缺少代码、数据和训练证据，不能用于证明训练提升。数值差不等于公平实验对比。关闭模块不删除数据库。
+
+M1使用标准库bootstrap短进程，SQLite短事务串行化写入；尚未部署单写者服务、持久调度、训练审批凭据、框架暂停续训、自动改训练项目代码或完整受控比较。普通Shell限额和审批规则不变。调用路径依赖此源码仓库，当前不是可独立分发的worker安装包。接口与目标架构见[技术设计](training-assistant-technical-design.md)，复测与后续训练步骤见[接入计划](../tests/plans/training-onboarding.md)。
+
+### 其他边界
+
 - 没有操作系统沙箱、独立账户强制隔离或默认网络隔离；Docker目前承载RAG数据库，不隔离本机Shell。
 - 没有持久交互式Shell、通用浏览器自动化、无人值守安装/发布、FastAPI前后端或多用户服务。
 - 文件修改仍保留既有差异审批，完整任务闭环允许人工介入，不能宣称全部自动完成。

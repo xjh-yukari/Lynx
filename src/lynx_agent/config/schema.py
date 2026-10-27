@@ -14,6 +14,7 @@ from lynx_agent.execution.config import ExecutionConfig
 from lynx_agent.knowledge.models import KnowledgeConfig
 from lynx_agent.mcp.config import MCPConfig
 from lynx_agent.memory.config import MemoryConfig
+from lynx_agent.training.config import TrainingConfig
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are Lynx, a helpful assistant. Respond in the user's language and answer directly. "
@@ -203,6 +204,7 @@ class Config(ConfigModel):
     knowledge: KnowledgeConfig = Field(default_factory=KnowledgeConfig)
     execution: ExecutionConfig = Field(default_factory=ExecutionConfig)
     approval: ApprovalConfig = Field(default_factory=ApprovalConfig)
+    training: TrainingConfig = Field(default_factory=TrainingConfig)
 
     @model_validator(mode="after")
     def validate_presets(self):
