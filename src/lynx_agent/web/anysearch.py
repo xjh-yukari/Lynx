@@ -25,7 +25,7 @@ class AnySearch:
             start = now - timedelta(days=days)
             search_query = f"{query}\nTime range: {start.isoformat(timespec='seconds')} to {now.isoformat(timespec='seconds')}"
             note = "AnySearch 通用接口无已确认的原生时间过滤；时间范围仅加入查询提示，不保证结果在范围内，需阅读原文核实日期。"
-        headers = {"Accept": "application/json", "X-Anysearch-Client": "lynx-agent/0.1.0"}
+        headers = {"Accept": "application/json", "X-Anysearch-Client": "lynx-agent/1.0.0"}
         if self.key and self.key.get_secret_value().strip():
             headers["Authorization"] = f"Bearer {self.key.get_secret_value()}"
         document = await self.client.post(

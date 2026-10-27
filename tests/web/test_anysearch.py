@@ -1,4 +1,5 @@
 import json
+from importlib.metadata import version
 
 import pytest
 
@@ -42,6 +43,7 @@ async def test_anonymous_search_uses_fixed_endpoint_and_normalizes_results():
     assert endpoint == "https://api.anysearch.com/v1/search"
     assert request["json"] == {"query": "近期文档", "max_results": 2}
     assert "Authorization" not in request["headers"]
+    assert request["headers"]["X-Anysearch-Client"] == f"lynx-agent/{version('lynx-agent')}"
 
 
 @pytest.mark.asyncio
