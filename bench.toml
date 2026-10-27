@@ -1,0 +1,122 @@
+# agent-bench 配置：被测 agent、模型参数、价格、预算与运行控制。
+# 密钥不写在这里：由 [model].api_key_env 指向的环境变量或 .env 提供。
+
+[model]
+name = "deepseek-flash"
+base_url = "https://api.deepseek.com"
+temperature = 0.2
+max_tokens = 8192
+reasoning_effort = "high"
+api_key_env = "DEEPSEEK_API_KEY"
+env_file = ".env"
+request_timeout_seconds = 180
+# dsh 走 Anthropic Messages 协议；缺省为 <base_url>/anthropic，
+# 需要换网关时在这里显式指定（留空即用默认值）。
+# anthropic_base_url = "https://api.deepseek.com/anthropic"
+
+# 单位：每百万 Token 的人民币价格；按实际报价填写，不写死在任何代码里。
+[price]
+currency = "CNY"
+input_per_million = 2.0
+cached_input_per_million = 0.2
+output_per_million = 8.0
+
+# 必填：没有预算上限就不会启动真实调用。
+[budget]
+max_cost_cny = 100.0
+
+[run]
+seed = 20251023
+repeats = 1
+concurrency = 1
+# 本次运行的对齐窗口；填充长度按它计算，Lynx 的本地窗口也会改成同一个值。
+align_context_window = 131072
+context_fill_ratio = 0.85
+results_dir = "results"
+turn_timeout_seconds = 600
+case_timeout_seconds = 3600
+retries = 3
+retry_backoff_seconds = 2.0
+keep_workspaces = false
+
+[proxy]
+host = "127.0.0.1"
+port = 0
+
+[env]
+enabled = true
+document_chars = 40000
+page_chars = 6000
+
+[scoring]
+bootstrap_iterations = 2000
+confidence = 0.95
+pass_k = 3
+
+[scoring.efficiency]
+max_input_tokens_per_turn = 40000
+min_cached_ratio = 0.25
+max_latency_ms = 30000
+max_cost_cny_per_case = 1.0
+
+# LLM 评分默认关闭；开启时必须使用与被测模型不同的模型。
+[llm_judge]
+enabled = false
+model = "deepseek-v4-pro"
+max_tokens = 512
+
+# ---------------------------------------------------------------- Lynx
+[agents.lynx]
+kind = "lynx"
+enabled = true
+native_tools = false
+memory_enabled = true
+# 留空表示沿用 Lynx 自己的 config.toml 里的 Engram 可执行文件路径。
+# memory_executable = 'E:\path\to\engram.exe'
+
+# ---------------------------------------------------------------- dsh
+# 已验证（本机 dsh 0.2.1-rc.2 + 打包安装）：
+#   * `dsh --profile headless --help` 正常，支持 --json / --session-id
+#   * 事件流：session(sessionId) / text / tool_call / final(text) / error
+#   * 模型走 Anthropic Messages 协议，端点为 $DEEPSEEK_BASE_URL（缺省 /anthropic）
+#   * 密钥只由启动环境或 $DSH_HOME/.env 提供；写进项目 .env 会被启动器拒绝
+#   * 插件 id：session-log-deepseek（会话日志上传）、llm-deepseek（环境密钥）
+# 因此 bench 用进程环境注入代理地址，并在 patch 里：
+#   1) 关闭会话日志上传；
+#   2) 用 dsh-mcp-client 挂上测试环境 MCP（工具名 mcp__bench_env__*）。
+[agents.dsh]
+kind = "cli"
+enabled = true
+display_name = "DeepSeek Harness"
+command = ["dsh", "--profile", "headless", "--json", "{task}"]
+stdin = true
+resume_args = ["--session-id", "{session}"]
+stdout = "ndjson"
+answer_event_type = "final"
+text_field = "text"
+session_event_type = "session"
+session_field = "sessionId"
+tool_event_type = "tool_call"
+base_url_env = "DEEPSEEK_BASE_URL"
+api_key_env = "DEEPSEEK_API_KEY"
+extra_args = ["--patch", "{patch}"]
+memory_dirs = []
+# 每题一个独立的 dsh home：会话与 storages 都落在工作区里，不碰用户日常的 ~/.dsh。
+extra_env = { DSH_HOME = "{workspace}/.dsh" }
+capabilities = ["multi_turn", "mcp"]
+patch = """- id: session-log-deepseek
+  disabled: true
+- insert:
+    - id: bench-env-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: bench_env
+        transport: stdio
+        command: !!js process.env.BENCH_PYTHON
+        args: ['-m', 'agent_bench.env_mcp.server']
+        cwd: !!js process.env.BENCH_WORKSPACE
+        env:
+          BENCH_ENV_DIR: !!js process.env.BENCH_ENV_DIR
+          BENCH_WORKSPACE: !!js process.env.BENCH_WORKSPACE
+        toolCallTimeoutMs: 90000
+"""

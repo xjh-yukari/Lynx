@@ -1,0 +1,59 @@
+{
+  "kind": "real_components_no_llm",
+  "checks": {
+    "scipy_matrix_array_empty": true,
+    "idempotent_build": true,
+    "real_pre_retrieval_project_filter": true,
+    "empty_sparse_dense_fallback": true,
+    "full_rebuild_removes_deleted_documents": true,
+    "real_alias_rollback": true,
+    "one_request_one_physical_version": true,
+    "failed_build_preserves_alias": true,
+    "two_real_http_mcp_clients_one_encoder": true,
+    "only_read_tool_exposed": true,
+    "shutdown_does_not_release_or_drop_collection": true,
+    "container_restart_persists_alias_data_and_load_state": true
+  },
+  "model_load_seconds": 12.375,
+  "physical": "lynx_rag_eb873e106fd6185e463106e2_9baf8876",
+  "index_version": "eb873e106fd6185e463106e22ea72401463ac8dd2376abb82a0f56b9304402f5",
+  "evaluation": [
+    {
+      "mode": "dense",
+      "query": "关闭程序后会话如何恢复？",
+      "recall_at_5": 1,
+      "retrieval_seconds_excluding_embedding": 0.391
+    },
+    {
+      "mode": "hybrid",
+      "query": "关闭程序后会话如何恢复？",
+      "recall_at_5": 1,
+      "retrieval_seconds_excluding_embedding": 0.406
+    },
+    {
+      "mode": "dense",
+      "query": "仅查看权限能不能修改文件",
+      "recall_at_5": 1,
+      "retrieval_seconds_excluding_embedding": 0.391
+    },
+    {
+      "mode": "hybrid",
+      "query": "仅查看权限能不能修改文件",
+      "recall_at_5": 1,
+      "retrieval_seconds_excluding_embedding": 0.406
+    },
+    {
+      "mode": "dense",
+      "query": "长期记忆使用什么数据库",
+      "recall_at_5": 1,
+      "retrieval_seconds_excluding_embedding": 0.328
+    },
+    {
+      "mode": "hybrid",
+      "query": "长期记忆使用什么数据库",
+      "recall_at_5": 1,
+      "retrieval_seconds_excluding_embedding": 0.406
+    }
+  ],
+  "note": "仅三道人工问题；不是通用检索质量结论，未测试付费模型路由或真实Engram写入"
+}

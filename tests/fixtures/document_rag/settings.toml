@@ -1,0 +1,9 @@
+uri = "http://127.0.0.1:19540"
+policy_file = 'E:\github\nanobot\tests\fixtures\document_rag\grants.json'
+state_dir = 'E:\github\lynx_agent_data\rag\validation-state'
+project_id = "rag_validation"
+model = "BAAI/bge-m3"
+model_revision = "5617a9f61b028005a4858fdac845db406aefb181"
+device = "cpu"
+port = 8767
+batch_size = 2

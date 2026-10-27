@@ -1,0 +1,12 @@
+uri = "http://127.0.0.1:19540"
+policy_file = 'E:\github\lynx_agent_data\rag\grants.json'
+state_dir = 'E:\github\lynx_agent_data\rag\state'
+# 必须与Agent实际memory.project_id相同；即使不启用Engram也有确定的项目ID。
+project_id = "lynx_agent"
+model = "BAAI/bge-m3"
+model_revision = "5617a9f61b028005a4858fdac845db406aefb181"
+device = "cpu"
+chunk_tokens = 600
+overlap_tokens = 80
+batch_size = 4
+port = 8766

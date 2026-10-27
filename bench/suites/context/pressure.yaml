@@ -1,0 +1,101 @@
+# 上下文管理：早期指令遵守、超窗口压力、按对齐窗口填充。
+cases:
+  - id: context.instruction.persist
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 2
+    description: 第一轮给出格式约束（一句话、不超过 40 字、不用列表），填充后检查是否仍遵守。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: >
+          从这一轮开始，你回答我的任何问题都必须只用一句话、不超过 40 个字，
+          不许使用列表、编号或换行。请记住这条规则。
+      - filler: { tokens: 26000, turns: 4, topic: 发布检查 }
+      - user: "介绍一下这个项目代号 {code} 可能代表的含义。"
+        grade:
+          - { type: length_limit, max: 120 }
+          - { type: not_contains, value: "1." }
+          - { type: not_contains, value: "- " }
+          - { type: contains, value: "{code}" }
+    metrics: [context.instruction_persistence]
+
+  - id: context.instruction.no_tools
+    suite: context
+    track: shared
+    requires: [multi_turn, mcp]
+    align_context_window: 32768
+    repeats: 2
+    description: 第一轮要求全程不要调用任何工具，填充后仍不得调用。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "这一整段对话不要调用任何工具，只凭对话内容回答。"
+      - filler: { tokens: 24000, turns: 3, topic: 巡检记录 }
+      - user: "我们前面约定不要做什么？用一句话回答。"
+        grade: [{ type: regex, value: "工具|调用" }]
+        expect_tool: { name: notes_set, called: false }
+      - user: "代号 {code} 只是占位符，不需要查询。请重复这个代号。"
+        expect_tool: { name: sandbox_write_file, called: false }
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.instruction_persistence, context.retention]
+
+  - id: context.overflow.pressure
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 2
+    description: 填充到明显超过输入预算，检查是否发生超窗口错误并仍能回答问题。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "记住项目代号 {code}。接下来的资料很长，不需要逐条回答，只要读完继续即可。"
+      - filler: { tokens: 42000, turns: 6, topic: 故障复盘 }
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.overflow_errors, context.retention]
+
+  - id: context.alignment.fill
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 2
+    description: 按对齐窗口的 85% 填充后提问，检查长上下文下仍能完成任务。
+    facts: { port: { kind: port } }
+    steps:
+      - session: new
+        user: "服务端口是 {port}，请记住。下面是一批背景资料。"
+      - filler: { tokens: 19500, turns: 4, topic: 容量评估 }
+      - user: "服务端口是多少？只回答数字。"
+        grade: [{ type: contains, value: "{port}" }]
+    metrics: [context.alignment]
+
+  - id: context.tool_result.recall
+    suite: context
+    track: shared
+    requires: [multi_turn, mcp]
+    align_context_window: 32768
+    repeats: 2
+    description: 读取超大文档后继续对话，再回头问文档中部的细节。
+    facts: { token: { kind: text } }
+    steps:
+      - env:
+          documents:
+            ops-manual:
+              $text:
+                chars: 30000
+                topic: 运维手册
+                facts:
+                  "48": "第 12 节的维护口令是 {token}，只在此处出现一次。"
+      - session: new
+        user: "用 documents_read 读一遍 ops-manual（可以分段），读完告诉我它大概有多少字，不要总结内容。"
+        expect_tool: { name: documents_read, called: true }
+        grade: [{ type: regex, value: "\\d" }]
+      - filler: { tokens: 12000, turns: 2, topic: 值班备注 }
+      - user: "那份运维手册里，第 12 节的维护口令是什么？只回答口令。"
+        grade: [{ type: contains, value: "{token}" }]
+    metrics: [context.tool_result_recall]

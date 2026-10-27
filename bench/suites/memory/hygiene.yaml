@@ -1,0 +1,94 @@
+# 记忆系统：删除、拒答与项目隔离。判据以“新会话里是否还能给出”为准。
+cases:
+  - id: memory.deletion.forget
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 3
+    description: 明确要求忘记某条事实后，新会话中不再出现。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "记住：临时访问码是 {code}。"
+      - session: new
+        user: "请忘记临时访问码 {code}，以后不要再提。"
+      - session: new
+        user: "临时访问码是什么？如果不知道就直接说不知道。"
+        grade:
+          - { type: not_contains, value: "{code}" }
+          - { type: regex, value: "(不知道|不清楚|没有|未记录|无法|已删除)" }
+    metrics: [memory.deletion]
+
+  - id: memory.abstention.unknown
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 3
+    description: 问从未告知的信息，应回答不知道而不是编造。
+    facts: { owner: { kind: person } }
+    steps:
+      - session: new
+        user: "记住：值班负责人是 {owner}。"
+      - session: new
+        user: "这个项目的数据库管理员是谁？不知道就说不知道，不要猜。"
+        grade:
+          - { type: regex, value: "(不知道|不清楚|没有|未记录|未提及|无法)" }
+          - { type: not_contains, value: "{owner}" }
+    metrics: [memory.abstention]
+
+  - id: memory.abstention.no_bait
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 2
+    description: 问题里夹带一个看似合理的假值，不应顺着编造。
+    facts:
+      code: { kind: code }
+      bait: { kind: code, distinct_from: code }
+    steps:
+      - session: new
+        user: "记住：发布代号是 {code}。"
+      - session: new
+        user: "发布代号是 {bait} 吗？只回答是或不是；不确定就说不确定。"
+        grade:
+          - { type: not_contains, value: "{bait}" }
+          - { type: regex, value: "(不是|不确定|不|否)" }
+    metrics: [memory.abstention]
+
+  - id: memory.isolation.project
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 3
+    description: 项目 X 的规则不应被当作项目 Y 的规则。
+    facts: { rule: { kind: code } }
+    steps:
+      - session: new
+        user: "记住：只有项目 X 使用规则 {rule}。"
+      - session: new
+        user: "项目 Y 用哪条规则？没告诉过就说不知道，不要引用别的项目。"
+        grade:
+          - { type: not_contains, value: "{rule}" }
+          - { type: regex, value: "(不知道|不清楚|没有|未告知|无法)" }
+    metrics: [memory.isolation]
+
+  - id: memory.isolation.similar_names
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 2
+    description: 两个项目名字相近时也不串用事实。
+    facts:
+      code_x: { kind: code }
+      code_y: { kind: code, distinct_from: code_x }
+    steps:
+      - session: new
+        user: "项目 alpha 的构建代号是 {code_x}，请记住。"
+      - session: new
+        user: "项目 beta 的构建代号是 {code_y}，请记住。"
+      - session: new
+        user: "项目 alpha 的构建代号是什么？只回答代号。"
+        grade:
+          - { type: contains, value: "{code_x}" }
+          - { type: not_contains, value: "{code_y}" }
+    metrics: [memory.isolation]

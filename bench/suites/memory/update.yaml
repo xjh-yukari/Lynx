@@ -1,0 +1,89 @@
+# 记忆系统：更正与更新。
+cases:
+  - id: memory.update.package_manager
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 3
+    description: 包管理器被更正后，新会话应答新值且不出现旧值。
+    facts:
+      old_pm: { choice: [npm, yarn] }
+      new_pm: { choice: [pnpm, bun], distinct_from: old_pm }
+    steps:
+      - session: new
+        user: "记住：这个项目的包管理器用 {old_pm}。"
+      - session: new
+        user: "更正一下，以后改用 {new_pm}，不再用 {old_pm}。"
+      - session: new
+        user: "这个项目用什么包管理器？只回答名称。"
+        grade:
+          - { type: contains, value: "{new_pm}" }
+          - { type: not_contains, value: "{old_pm}" }
+    metrics: [memory.update_accuracy]
+
+  - id: memory.update.port
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 2
+    description: 端口被更正后，新会话只应回答新端口。
+    facts:
+      old_port: { kind: port }
+      new_port: { kind: port, distinct_from: old_port }
+    steps:
+      - session: new
+        user: "记住：灰度环境的端口是 {old_port}。"
+      - session: new
+        user: "更正：灰度环境端口已经改成 {new_port}，之前的 {old_port} 作废。"
+      - session: new
+        user: "灰度环境现在用哪个端口？只回答数字。"
+        grade:
+          - { type: contains, value: "{new_port}" }
+          - { type: not_contains, value: "{old_port}" }
+    metrics: [memory.update_accuracy]
+
+  - id: memory.update.three_steps
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 2
+    description: 同一个值被连续更正两次，最新值生效。
+    facts:
+      first: { choice: [Alice, Bob] }
+      second: { choice: [Carol, Dave], distinct_from: first }
+      third: { choice: [Erin, Frank] }
+    steps:
+      - session: new
+        user: "值班负责人是 {first}。"
+      - session: new
+        user: "值班负责人改成 {second}。"
+      - session: new
+        user: "再更新一次，现在是 {third}。请记住，之前的都不要再用。"
+      - session: new
+        user: "现在值班负责人是谁？只回答人名。"
+        grade:
+          - { type: contains, value: "{third}" }
+          - { type: not_contains, value: "{second}" }
+    metrics: [memory.update_accuracy]
+
+  - id: memory.update.scope_split
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 2
+    description: 更正只发生在对应对象上，另一条事实不受影响。
+    facts:
+      quota_a: { kind: integer, min: 10, max: 40 }
+      quota_b: { kind: integer, min: 50, max: 90 }
+      quota_new: { kind: integer, min: 100, max: 160 }
+    steps:
+      - session: new
+        user: "记住两个配额：A 组 {quota_a}，B 组 {quota_b}。"
+      - session: new
+        user: "只更新 A 组配额为 {quota_new}，B 组保持不变。"
+      - session: new
+        user: "A 组配额是多少？只回答数字。"
+        grade: [{ type: contains, value: "{quota_new}" }]
+      - user: "B 组配额是多少？只回答数字。"
+        grade: [{ type: contains, value: "{quota_b}" }]
+    metrics: [memory.update_accuracy]

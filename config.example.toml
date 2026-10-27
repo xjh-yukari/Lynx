@@ -1,0 +1,77 @@
+# 示例文件不会自动启用。使用时在项目根目录创建 config.toml。
+# 长期记忆说明见 docs/product-plan.md；只合并需要的配置段，不覆盖现有文件。
+# 密钥继续放在 .env；MODEL_* 和 DEEPSEEK_MODEL 环境配置优先于当前预设。
+model_preset = "daily"
+
+# 分级审批（应用层权限与审批，不是操作系统沙箱）。
+# 默认：文件权限“工作区修改” + 审批“常用操作自动”。
+# mode = "ask" 每次询问；"auto" 常用操作自动；"paused" 暂停执行（可分析/预览）。
+# 运行期用 /approval 或点击底栏“审批：自动 ▾”切换，不写回本文件。
+# APPROVAL_MODE 环境变量可覆盖 mode。
+[approval]
+mode = "auto"
+approval_timeout_seconds = 600
+max_batch_files = 200
+max_batch_bytes = 52428800
+max_batch_operations = 1000
+preview_page_size = 10
+backup_enabled = true
+download_max_bytes = 52428800
+download_timeout_seconds = 60
+download_max_redirects = 5
+extract_max_files = 200
+extract_max_bytes = 52428800
+extract_max_ratio = 200
+
+[model_presets.daily]
+provider = "deepseek"
+name = "deepseek-flash"
+# 可选：off / low / high / max；显式预设优先于 TUI 保存的同模型档位。
+# reasoning_effort = "high"
+max_tokens = 8192
+context_window_tokens = 65536
+
+# 启用 Engram 后可选择自动保留普通任务结论；SOUL/USER/AGENTS 仍需人工批准。
+# [memory]
+# enabled = true
+# executable = 'E:\github\lynx_agent_data\bin\engram\3.4.0\engram.exe'
+# data_dir = 'E:\github\lynx_agent_data\memory'
+# project_id = 'lynx_agent'
+# auto_save = true
+# auto_save_timeout_seconds = 20
+
+# 独立文档RAG（部署/授权/导入完成后再启用，不能直接覆盖当前配置）：
+# 详见 services/document_rag/README.md。
+# [knowledge]
+# enabled = true
+# policy_file = 'E:\github\lynx_agent_data\rag\grants.json'
+# server_name = "documents"
+# [mcp.servers.documents]
+# enabled = true
+# transport = "streamable_http"
+# url = "http://127.0.0.1:8766/mcp"
+# token_env = "RAG_MCP_TOKEN"
+# allowed_tools = ["search_knowledge"]
+# read_only_tools = ["search_knowledge"]
+# call_timeout = 120
+
+# 本地 MCP 示例：默认关闭。启用前填写实际程序、服务脚本和工作目录。
+# 修改后重启 Agent；这里的服务仅做加法测试，不会保存长期记忆。
+# [mcp.servers.demo]
+# enabled = false
+# command = 'E:\github\nanobot\.venv\Scripts\python.exe'
+# args = ['E:\github\nanobot\tests\mcp\fixture_server.py']
+# cwd = 'E:\github\nanobot'
+# allowed_tools = ['add']
+# read_only_tools = ['add']
+# allow_write = false
+# startup_timeout = 15
+# call_timeout = 20
+# shutdown_timeout = 10
+
+[model_presets.long_answer]
+provider = "deepseek"
+name = "deepseek-flash"
+# 示例值，启用前需核实 API 是否支持此输出长度。
+max_tokens = 12288
+context_window_tokens = 65536

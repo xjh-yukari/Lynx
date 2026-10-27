@@ -1,0 +1,105 @@
+# 工具调用：选择、参数与“不需要工具时不要用”。
+cases:
+  - id: tools.selection.notes
+    suite: tools
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 要求把结论存进笔记库，检查是否调用了正确的工具。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "把结论存进笔记库：key 用 release-summary，内容是今天发布了 {code}。"
+        expect_tool: { name: notes_set, called: true }
+        grade: [{ type: contains, value: "release-summary" }]
+      - user: "笔记库里 release-summary 存的是什么？查一下再回答。"
+        expect_tool: { name: notes_get, called: true }
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [tools.selection_accuracy]
+
+  - id: tools.selection.orders
+    suite: tools
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 订单状态必须以查询结果为准。
+    facts: { order: { choice: [A-1001, A-1002, B-2001] } }
+    steps:
+      - env:
+          orders:
+            A-1001: { status: 已发货, amount: 328 }
+            A-1002: { status: 待付款, amount: 96 }
+            B-2001: { status: 已取消, amount: 512 }
+      - session: new
+        user: "查一下订单 {order} 的状态和金额。"
+        expect_tool: { name: orders_lookup, called: true, args: { order_id: "{order}" } }
+        grade: [{ type: regex, value: "(328|96|512)" }]
+    metrics: [tools.selection_accuracy, tools.argument_accuracy]
+
+  - id: tools.argument.exact
+    suite: tools
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 参数必须与用户要求完全一致（key 与内容）。
+    facts: { token: { kind: text } }
+    steps:
+      - session: new
+        user: >
+          请在笔记库里存一条：key 必须是 deploy-token，内容必须是 {token}。
+          不要改 key，也不要改动内容。
+        expect_tool: { name: notes_set, called: true, args: { key: deploy-token } }
+        grade: [{ type: contains, value: "deploy-token" }]
+      - expect_state:
+          kv: { deploy-token: "{token}" }
+    metrics: [tools.argument_accuracy]
+
+  - id: tools.misuse.no_tool_math
+    suite: tools
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 3
+    description: 纯计算问题不该调用任何工具。
+    steps:
+      - session: new
+        user: "17 乘以 23 等于多少？只回答数字。"
+        expect_tool: { name: "*", called: false }
+        grade: [{ type: exact, value: "391" }]
+    metrics: [tools.misuse_rate]
+
+  - id: tools.misuse.no_tool_chat
+    suite: tools
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 3
+    description: 闲聊与常识问题不该调用工具。
+    steps:
+      - session: new
+        user: "用一个简短的比喻解释什么是缓存。不要调用任何工具。"
+        expect_tool: { name: "*", called: false }
+        grade: [{ type: length_limit, max: 300 }, { type: regex, value: "." }]
+    metrics: [tools.misuse_rate]
+
+  - id: tools.multistep.doc_to_note
+    suite: tools
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 先读文档再落笔，检查两步工具链与参数。
+    facts: { token: { kind: text } }
+    steps:
+      - env:
+          documents:
+            runbook:
+              $text:
+                chars: 9000
+                topic: 运行手册
+                facts:
+                  "60": "第 7 节的回滚口令是 {token}。"
+      - session: new
+        user: "读 runbook，找到回滚口令，然后用 notes_set 把口令存到 key=rollback 下面。"
+        expect_tool: { name: notes_set, called: true, args: { key: rollback } }
+        grade: [{ type: contains, value: "{token}" }]
+      - expect_state:
+          kv: { rollback: "{token}" }
+    metrics: [tools.selection_accuracy, tools.argument_accuracy]

@@ -1,0 +1,7 @@
+[
+  {
+    "id": "session-format-example",
+    "title": "会话持久化测试资料",
+    "description": "此为测试样本：会话使用 JSONL 保存，关闭后可通过会话编号恢复。不是完整产品规范。"
+  }
+]

@@ -1,0 +1,37 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# agent-bench 运行产物（成绩单、trace、录制记录、工作区）
+/results/
+
+# 本地开发缓存（uv 缓存目录、pytest 临时目录等）
+.uv-cache/
+.bench-tmp/
+
+# 本机凭据和配置：保留在磁盘，不进入版本历史。
+.env
+.env.*
+!.env.example
+!.env.template
+/config.toml
+*.key
+*.pem
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+*.log
+
+# 编辑器与测试缓存（不删除本地文件）。
+.idea/
+.pytest_cache/
+.ruff_cache/

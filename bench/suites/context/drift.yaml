@@ -1,0 +1,77 @@
+# 上下文管理：多次压缩后的保留率衰减曲线。
+# 三个用例分别填充到触发约 1 / 3 / 5 次压缩，报告据此画衰减曲线。
+cases:
+  - id: context.drift.c1
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 2
+    description: 填充到触发约 1 次压缩后提问。
+    tags: ["compactions:1"]
+    facts:
+      code: { kind: code }
+      port: { kind: port }
+    steps:
+      - session: new
+        user: "记住：代号 {code}，端口 {port}。"
+      - filler: { tokens: 26000, turns: 3, topic: 容量评估 }
+      - user: "代号是什么？只回答代号。"
+        metric: context.retention_drift
+        grade: [{ type: contains, value: "{code}" }]
+      - user: "端口是多少？只回答数字。"
+        metric: context.retention_drift
+        grade: [{ type: contains, value: "{port}" }]
+    metrics: [context.retention_drift]
+
+  - id: context.drift.c3
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 2
+    description: 填充到触发约 3 次压缩后提问。
+    tags: ["compactions:3"]
+    facts:
+      code: { kind: code }
+      port: { kind: port }
+    steps:
+      - session: new
+        user: "记住：代号 {code}，端口 {port}。"
+      - filler: { tokens: 26000, turns: 2, topic: 容量评估 }
+      - filler: { tokens: 26000, turns: 2, topic: 值班备注 }
+      - filler: { tokens: 26000, turns: 2, topic: 故障复盘 }
+      - user: "代号是什么？只回答代号。"
+        metric: context.retention_drift
+        grade: [{ type: contains, value: "{code}" }]
+      - user: "端口是多少？只回答数字。"
+        metric: context.retention_drift
+        grade: [{ type: not_contains, value: "不知道" }, { type: contains, value: "{port}" }]
+    metrics: [context.retention_drift]
+
+  - id: context.drift.c5
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 2
+    description: 填充到触发约 5 次压缩后提问。
+    tags: ["compactions:5"]
+    facts:
+      code: { kind: code }
+      port: { kind: port }
+    steps:
+      - session: new
+        user: "记住：代号 {code}，端口 {port}。"
+      - filler: { tokens: 26000, turns: 2, topic: 容量评估 }
+      - filler: { tokens: 26000, turns: 2, topic: 值班备注 }
+      - filler: { tokens: 26000, turns: 2, topic: 故障复盘 }
+      - filler: { tokens: 26000, turns: 2, topic: 发布检查 }
+      - filler: { tokens: 26000, turns: 2, topic: 巡检记录 }
+      - user: "代号是什么？只回答代号。"
+        metric: context.retention_drift
+        grade: [{ type: contains, value: "{code}" }]
+      - user: "端口是多少？只回答数字。"
+        metric: context.retention_drift
+        grade: [{ type: contains, value: "{port}" }]
+    metrics: [context.retention_drift]

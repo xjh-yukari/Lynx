@@ -1,0 +1,71 @@
+# 记忆系统：跨会话召回。
+cases:
+  - id: memory.cross_session.basic
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 3
+    description: 会话 A 告知事实，新会话 B 提问。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "记住：这个项目的内部代号是 {code}。"
+      - session: new
+        user: "这个项目的内部代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [memory.cross_session_recall]
+
+  - id: memory.cross_session.multiple
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 2
+    description: 三个事实分别写入，新会话逐条提问。
+    facts:
+      code: { kind: code }
+      port: { kind: port }
+      owner: { kind: person }
+    steps:
+      - session: new
+        user: "请记住三件事：项目代号 {code}，服务端口 {port}，负责人 {owner}。"
+      - session: new
+        user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+      - user: "服务端口是多少？只回答数字。"
+        grade: [{ type: contains, value: "{port}" }]
+      - user: "负责人是谁？只回答人名。"
+        grade: [{ type: contains, value: "{owner}" }]
+    metrics: [memory.cross_session_recall]
+
+  - id: memory.cross_session.after_filler
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    repeats: 2
+    description: 写入事实后聊很久，再开新会话提问。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "记住：构建流水线代号是 {code}。"
+      - filler: { tokens: 9000, turns: 3, topic: 值班备注 }
+      - session: new
+        user: "构建流水线的代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [memory.cross_session_recall]
+
+  - id: memory.cross_session.after_compaction
+    suite: memory
+    track: shared
+    requires: [multi_turn, cross_session_memory]
+    align_context_window: 32768
+    repeats: 2
+    description: 写入事实后把当前会话填充到触发压缩，再开新会话提问。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "记住：灾备演练代号是 {code}。"
+      - filler: { tokens: 26000, turns: 4, topic: 故障复盘 }
+      - session: new
+        user: "灾备演练的代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [memory.cross_session_recall]

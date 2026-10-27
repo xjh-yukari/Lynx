@@ -1,0 +1,29 @@
+[project]
+name = "agent-bench"
+version = "0.1.0"
+description = "量化评测框架：用真实模型 API 给任意 agent 的上下文管理与记忆能力打分"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # 录制代理与本地管理接口（与 Lynx 共用同一版本区间）。
+    "aiohttp>=3.14.5,<4",
+    # 测试环境 MCP 服务器（stdio 传输）。
+    "mcp>=2.3.0,<3",
+    # 配置、用例与结果的强类型模型。
+    "pydantic>=2.14,<3",
+    # 套件 YAML 解析（新增依赖，锁定在 6.0.x）。
+    "pyyaml>=6.0.2,<6.1",
+    # 终端成绩单（新增依赖，锁定在 14.x）。
+    "rich>=14.1.0,<15",
+]
+
+[project.scripts]
+bench = "agent_bench.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "agent_bench"
+module-root = "src"

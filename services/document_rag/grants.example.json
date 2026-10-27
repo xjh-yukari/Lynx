@@ -1,0 +1,10 @@
+{
+  "project_id": "lynx_agent",
+  "grants": {
+    "default": {
+      "enabled": true,
+      "alias": "lynx_kb_default",
+      "coverage": "仅用户通过离线导入计划明确指定的文档"
+    }
+  }
+}

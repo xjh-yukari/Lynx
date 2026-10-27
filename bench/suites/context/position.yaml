@@ -1,0 +1,155 @@
+# 上下文管理：事实位置（10%/50%/90%）× 对齐窗口（32k/64k/128k）的热力图。
+# 标签 position:N 与 window:N 供报告绘制热力图；窗口用 align_context_window 显式指定。
+cases:
+  - id: context.position.pos10.w32k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    description: 事实埋在上下文前 10%，总长约 32k。
+    tags: ["position:10", "window:32768"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "请记住项目代号 {code}。"
+      - filler: { tokens: 20000, turns: 4, topic: 部署日志 }
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos50.w32k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    description: 事实埋在上下文中部，总长约 32k。
+    tags: ["position:50", "window:32768"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "先看一批背景资料。"
+      - filler: { tokens: 10000, turns: 2, topic: 部署日志 }
+      - user: "请记住项目代号 {code}。"
+      - filler: { tokens: 10000, turns: 2, topic: 发布检查 }
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos90.w32k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    description: 事实埋在上下文后 10%，总长约 32k。
+    tags: ["position:90", "window:32768"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "先看一批背景资料。"
+      - filler: { tokens: 20000, turns: 4, topic: 故障复盘 }
+      - user: "请记住项目代号 {code}。"
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos10.w64k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 65536
+    description: 事实埋在上下文前 10%，总长约 64k。
+    tags: ["position:10", "window:65536"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "请记住项目代号 {code}。"
+      - filler: { tokens: 39000, turns: 6, topic: 部署日志 }
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos50.w64k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 65536
+    description: 事实埋在上下文中部，总长约 64k。
+    tags: ["position:50", "window:65536"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "先看一批背景资料。"
+      - filler: { tokens: 19500, turns: 3, topic: 部署日志 }
+      - user: "请记住项目代号 {code}。"
+      - filler: { tokens: 19500, turns: 3, topic: 发布检查 }
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos90.w64k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 65536
+    description: 事实埋在上下文后 10%，总长约 64k。
+    tags: ["position:90", "window:65536"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "先看一批背景资料。"
+      - filler: { tokens: 39000, turns: 6, topic: 故障复盘 }
+      - user: "请记住项目代号 {code}。"
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos10.w128k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 131072
+    description: 事实埋在上下文前 10%，总长约 128k（本次运行的对齐窗口）。
+    tags: ["position:10", "window:131072"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "请记住项目代号 {code}。"
+      - filler: { tokens: 78000, turns: 10, topic: 部署日志 }
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos50.w128k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 131072
+    description: 事实埋在上下文中部，总长约 128k。
+    tags: ["position:50", "window:131072"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "先看一批背景资料。"
+      - filler: { tokens: 39000, turns: 5, topic: 部署日志 }
+      - user: "请记住项目代号 {code}。"
+      - filler: { tokens: 39000, turns: 5, topic: 发布检查 }
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]
+
+  - id: context.position.pos90.w128k
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 131072
+    description: 事实埋在上下文后 10%，总长约 128k。
+    tags: ["position:90", "window:131072"]
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "先看一批背景资料。"
+      - filler: { tokens: 78000, turns: 10, topic: 故障复盘 }
+      - user: "请记住项目代号 {code}。"
+      - user: "项目代号是什么？只回答代号。"
+        grade: [{ type: contains, value: "{code}" }]
+    metrics: [context.position_recall]

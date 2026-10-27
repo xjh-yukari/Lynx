@@ -1,0 +1,100 @@
+# 鲁棒性：超时、报错、找不到、副作用重复。
+cases:
+  - id: robustness.timeout.recover
+    suite: robustness
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 工具第一次超时，agent 仍应给出结论而不是卡死。
+    steps:
+      - env:
+          faults:
+            flaky_task: { mode: timeout, times: 1, seconds: 2, message: "任务执行超时" }
+      - session: new
+        user: "执行一次 flaky_task（name=sync）。遇到失败就说明失败原因，然后给出结论。"
+        expect_tool: { name: flaky_task, called: true }
+        grade: [{ type: regex, value: "(超时|失败|完成|重试)" }]
+    metrics: [robustness.completion]
+
+  - id: robustness.error.recover
+    suite: robustness
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 连续两次报错后仍能完成任务。
+    steps:
+      - env:
+          faults:
+            flaky_task: { mode: error, times: 2, message: "下游服务暂时不可用" }
+      - session: new
+        user: "执行 flaky_task（name=deploy）。如果报错，最多再试一次，然后告诉我最终状态。"
+        expect_tool: { name: flaky_task, called: true }
+        grade: [{ type: regex, value: "(不可用|失败|错误|成功|完成)" }]
+    metrics: [robustness.completion]
+
+  - id: robustness.not_found.doc
+    suite: robustness
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 3
+    description: 请求不存在的文档时必须明确说明，而不是编造内容。
+    facts: { code: { kind: code } }
+    steps:
+      - session: new
+        user: "读取 missing-doc 的第 3 节，把内容原样贴给我。"
+        expect_tool: { name: documents_read, called: true }
+        grade: [{ type: regex, value: "(不存在|找不到|无法|没有)" }, { type: not_contains, value: "{code}" }]
+    metrics: [robustness.completion]
+
+  - id: robustness.not_found.order
+    suite: robustness
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 3
+    description: 不存在的订单不应被编造出状态。
+    facts: { order: { kind: text } }
+    steps:
+      - env:
+          orders:
+            A-1001: { status: 已发货, amount: 328 }
+      - session: new
+        user: "查一下订单 {order} 的状态。"
+        expect_tool: { name: orders_lookup, called: true }
+        grade: [{ type: regex, value: "(不存在|找不到|无法|没有)" }]
+    metrics: [robustness.completion]
+
+  - id: robustness.side_effect.single_write
+    suite: robustness
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 写文件不应因重试而重复执行。
+    facts: { code: { kind: code } }
+    steps:
+      - env:
+          faults:
+            sandbox_write_file: { mode: error, times: 1, message: "写入暂时失败" }
+      - session: new
+        user: "把 {code} 写进 note.txt。如果失败，先确认文件是否已经存在再决定是否重试。"
+        expect_tool: { name: sandbox_write_file, called: true }
+        grade: [{ type: regex, value: "(写入|完成|失败|成功|已存在)" }]
+    metrics: [robustness.side_effect_duplicates, robustness.completion]
+
+  - id: robustness.mixed_failure
+    suite: robustness
+    track: shared
+    requires: [multi_turn, mcp]
+    repeats: 2
+    description: 一次工具报错后继续完成另一件正常任务。
+    facts: { code: { kind: code } }
+    steps:
+      - env:
+          faults:
+            notes_get: { mode: error, times: 1, message: "笔记库暂时不可用" }
+      - session: new
+        user: "先读笔记 missing-note，失败也没关系；然后把代号 {code} 存进 key=fallback。"
+        expect_tool: { name: notes_set, called: true, args: { key: fallback } }
+        grade: [{ type: regex, value: "(不可用|失败|已存|保存)" }]
+      - expect_state:
+          kv: { fallback: "{code}" }
+    metrics: [robustness.completion]

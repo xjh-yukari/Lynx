@@ -1,0 +1,6 @@
+[
+  {"path": "E:/github/nanobot/tests/fixtures/document_rag/session.md"},
+  {"path": "E:/github/nanobot/tests/fixtures/document_rag/structured-example.json", "fields": {
+    "text": ["title", "description"], "title": "title", "id": "id"
+  }}
+]

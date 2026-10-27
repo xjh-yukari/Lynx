@@ -1,0 +1,1 @@
+{"project_id":"rag_validation","grants":{"default":{"enabled":true,"alias":"lynx_kb_validation","coverage":"隔离验证用的三份人工测试文档，不包含用户私人资料"}}}

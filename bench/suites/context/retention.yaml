@@ -1,0 +1,83 @@
+# 上下文管理：压缩后的事实保留率。
+# 用小窗口跑压缩类用例以控制费用；位置召回套件覆盖 32k/64k/128k 三档。
+cases:
+  - id: context.retention.basic
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 2
+    description: 前几轮埋 10 个事实，填充到超过对齐窗口触发压缩，再逐个提问。
+    facts:
+      code: { kind: code }
+      port: { kind: port }
+      person: { kind: person }
+      launch: { kind: date }
+      quota: { kind: integer, min: 20, max: 90 }
+      backup: { kind: code, distinct_from: code }
+      region: { choice: [ap-southeast, eu-central, us-west] }
+      owner2: { kind: person }
+      window: { kind: integer, min: 100, max: 480 }
+      token: { kind: text }
+    steps:
+      - session: new
+        user: >
+          请记住这个项目的 10 条参数，稍后我会逐条提问：
+          项目代号 {code}；服务端口 {port}；负责人 {person}；上线日期 {launch}；
+          配额 {quota}；备用代码 {backup}；主区域 {region}；备份负责人 {owner2}；
+          维护窗口 {window} 分钟；内部口令 {token}。
+      - filler: { tokens: 26000, turns: 5, topic: 发布日志 }
+      - user: "项目代号是什么？只回答代号。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{code}" }]
+      - user: "服务端口是多少？只回答数字。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{port}" }]
+      - user: "负责人是谁？只回答人名。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{person}" }]
+      - user: "上线日期是哪天？只回答日期。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{launch}" }]
+      - user: "配额是多少？只回答数字。"
+        metric: context.retention
+        grade: [{ type: numeric, value: "{quota}", tolerance: 0 }]
+      - user: "备用代码是什么？只回答代码。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{backup}" }, { type: not_contains, value: "{code}" }]
+      - user: "主区域是哪一个？只回答名称。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{region}" }]
+      - user: "备份负责人是谁？只回答人名。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{owner2}" }]
+      - user: "维护窗口是多少分钟？只回答数字。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{window}" }]
+      - user: "内部口令是什么？只回答口令。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{token}" }]
+    metrics: [context.retention]
+
+  - id: context.retention.short
+    suite: context
+    track: shared
+    requires: [multi_turn]
+    align_context_window: 32768
+    repeats: 3
+    description: 只埋 3 个事实并填充到一次压缩，验证最基础的事实保留。
+    facts:
+      code: { kind: code }
+      port: { kind: port }
+      person: { kind: person }
+    steps:
+      - session: new
+        user: "记录三点：代号 {code}，端口 {port}，负责人 {person}。"
+      - filler: { tokens: 26000, turns: 3, topic: 值班备注 }
+      - user: "负责人是谁？只回答人名。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{person}" }]
+      - user: "端口是多少？只回答数字。"
+        metric: context.retention
+        grade: [{ type: contains, value: "{port}" }]
+    metrics: [context.retention]
