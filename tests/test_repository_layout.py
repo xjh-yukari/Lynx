@@ -83,3 +83,18 @@ def test_project_rules_require_tests_verified_commits_and_handoff():
     for required in ("新增或更新相关测试", "uv run --locked pytest -q", "ruff check src tests",
                      "必须创建对应的 Git commit", "commit 短哈希", "不能宣称已通过全部验证"):
         assert required in rules
+
+
+def test_training_requirements_keep_confirmed_decisions_and_draft_status():
+    """仅检查需求决策未漏记，不代表训练功能已通过行为验收。"""
+    requirements = (ROOT / "docs" / "training-assistant-requirements.md").read_text(encoding="utf-8")
+    for decision, expected in {
+        "C01": "Windows + WSL", "C02": "GRPO / SFT", "C03": "历史对比",
+        "C04": "授权范围内改代码", "C05": "DeepSeek", "C06": "SQLite",
+        "C07": "无固定运行时限", "C08": "Git commit",
+    }.items():
+        row = next(line for line in requirements.splitlines() if line.startswith(f"| {decision} "))
+        assert expected in row
+    assert "需求讨论稿，尚未实现" in requirements
+    assert "代码回滚不自动回滚 SQLite" in requirements
+    assert "不开始功能开发，不连接或改变当前训练任务" in requirements
