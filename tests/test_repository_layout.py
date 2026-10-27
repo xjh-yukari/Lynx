@@ -92,9 +92,25 @@ def test_training_requirements_keep_confirmed_decisions_and_draft_status():
         "C01": "Windows + WSL", "C02": "GRPO / SFT", "C03": "历史对比",
         "C04": "授权范围内改代码", "C05": "DeepSeek", "C06": "SQLite",
         "C07": "无固定运行时限", "C08": "Git commit",
+        "C09": "源码位置", "C10": "保存检查点后退出",
     }.items():
         row = next(line for line in requirements.splitlines() if line.startswith(f"| {decision} "))
         assert expected in row
     assert "需求讨论稿，尚未实现" in requirements
     assert "代码回滚不自动回滚 SQLite" in requirements
-    assert "不开始功能开发，不连接或改变当前训练任务" in requirements
+    assert "不构成启动训练" in requirements
+    assert "没有读取训练源码" in requirements
+
+
+def test_training_requirements_index_tools_and_release_gates():
+    """校验完整需求稿的能力索引，不能据此宣称训练能力已经实现。"""
+    requirements = (ROOT / "docs" / "training-assistant-requirements.md").read_text(encoding="utf-8")
+    for section in ("## 10. 本机环境与路径规划", "## 11. 必需工具与复用清单",
+                    "## 12. 模块、接口与持久状态契约", "## 13. 实施门禁与新增验收"):
+        assert section in requirements
+    for tool in ("inspect_environment", "inspect_training_project", "git_versions", "submit_job",
+                 "request_pause", "inspect_checkpoint", "resume_job", "compare_experiments",
+                 "query_experiments", "backup_registry"):
+        assert re.search(rf"^\| {tool} \|", requirements, re.MULTILINE)
+    for number in range(1, 13):
+        assert re.search(rf"^\| A{number:02d} \|", requirements, re.MULTILINE)
