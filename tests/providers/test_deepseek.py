@@ -2,10 +2,11 @@
 
 import asyncio
 import json
+import os
 
 import httpx2
 import pytest
-from openai import AsyncOpenAI
+from openai import DefaultAsyncHttpxClient
 
 from lynx_agent.agent import AgentRunner
 from lynx_agent.config.schema import (
@@ -89,12 +90,29 @@ def mock_transport(monkeypatch):
     """为 Provider 创建的 SDK 客户端安装离线 transport。"""
     def install(handler):
         def client_factory(**kwargs):
-            return AsyncOpenAI(
-                **kwargs,
-                http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)),
-            )
-        monkeypatch.setattr("lynx_agent.providers.deepseek.AsyncOpenAI", client_factory)
+            assert kwargs["trust_env"] is False
+            return DefaultAsyncHttpxClient(**kwargs, transport=httpx2.MockTransport(handler))
+        monkeypatch.setattr("lynx_agent.providers.deepseek.DefaultAsyncHttpxClient", client_factory)
     return install
+
+
+@pytest.mark.asyncio
+async def test_model_client_ignores_proxy_and_certificate_environment_without_mutating_it(monkeypatch):
+    # 无效代理/CA配置在旧客户端构造阶段即失败；无需联网即可复现环境依赖。
+    values = {"HTTPS_PROXY": "unsupported-proxy://127.0.0.1:9",
+              "HTTP_PROXY": "unsupported-proxy://127.0.0.1:9",
+              "ALL_PROXY": "unsupported-proxy://127.0.0.1:9",
+              "https_proxy": "unsupported-proxy://127.0.0.1:9",
+              "NO_PROXY": "localhost", "SSL_CERT_FILE": "nonexistent-lynx-test-ca.pem"}
+    for key, value in values.items():
+        monkeypatch.setenv(key, value)
+    async with create_provider(make_config()) as provider:
+        http = provider._client._client
+        assert http._trust_env is False
+        assert not http._mounts
+        assert provider._client.max_retries == 0
+    assert http.is_closed
+    assert all(os.environ[key] == value for key, value in values.items())
 
 
 @pytest.mark.asyncio

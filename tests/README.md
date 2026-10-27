@@ -73,6 +73,10 @@ Remove-Item Env:LYNX_PRESSURE_TEST
 
 训练助手自动测试：`uv run --locked pytest tests/training -q`；worker标准库源码额外检查：`uv run --locked ruff check services/training_worker`。真实WSL临时冒烟及后续GPU门禁见[接入计划](plans/training-onboarding.md)和[worker说明](../services/training_worker/README.md)，没有默认真实训练测试。
 
+## DeepSeek 直连回归
+
+DeepSeek直连回归：`uv run --locked pytest tests/providers/test_deepseek.py -q`；离线验证无效环境代理/证书覆盖不影响模型客户端、环境变量不被改写，以及普通/流式工具协议和关闭连接。自动测试不访问真实API，不消耗模型费用。
+
 ## 训练只读监测补充
 
 `uv run --locked pytest tests/training/test_training_observe.py -q`验证进程/历史结果区分、日志有界分页、坏JSONL、来源时间、路径/硬链接/符号链接拒绝、仅查看模式查询和模型工具。测试只使用临时项目，不启动训练、不调用模型。完整训练模块测试：`uv run --locked pytest tests/training -q`；代码检查包括`uv run --locked ruff check src tests services/training_worker`。真实项目检查只采集已授权目录内日志/指标，不能以此替代训练或续训验收。`tests/manual/check_training_observe.py`在WSL临时目录启动一个仅sleep的假脚本，验证真实/proc关联、日志和指标读取，随后清理；不调用模型或GPU。

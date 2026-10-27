@@ -9,6 +9,7 @@ from openai import (
     APITimeoutError,
     AsyncOpenAI,
     AuthenticationError,
+    DefaultAsyncHttpxClient,
     RateLimitError,
     omit,
 )
@@ -78,6 +79,8 @@ class DeepSeekProvider(ModelProvider):
             base_url=str(provider_config.base_url),
             timeout=provider_config.timeout_seconds,
             max_retries=0,
+            # 只限制模型客户端，不改进程代理环境；保留SDK连接池和HTTPS证书校验默认值。
+            http_client=DefaultAsyncHttpxClient(trust_env=False),
         )
 
     @staticmethod

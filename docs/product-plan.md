@@ -107,6 +107,8 @@ uv run python scripts\rag_runtime.py agent
 
 Provider 只负责协议转换，不执行函数、不保存会话、不擅自重试有副作用的操作。支持 generate、stream、system/user/assistant/tool消息、工具定义与工具参数增量、usage和停止原因。其他模型供应商尚需各自适配与验证。
 
+DeepSeek Provider 的HTTP客户端固定使用`trust_env=False`直连配置的base_url，普通/流式对话、工具调用、摘要等共用此客户端。不读取HTTP_PROXY/HTTPS_PROXY/ALL_PROXY/NO_PROXY等环境代理，也不采用SSL_CERT_FILE/SSL_CERT_DIR环境覆盖；仍保持HTTPS证书校验和SDK默认连接池，不自动重试或降级为代理。不修改系统/进程代理变量，其他联网客户端保持原行为。自定义base_url仍指向用户配置的目标，不自动改成官方地址；系统TUN/透明代理不在此应用设置的控制范围。代码更新后重启Lynx生效，无需手工设置NO_PROXY。
+
 模型、密钥、超时、输出上限等使用 `.env` 与 `config.example.toml` 对应字段；不要在对话、工具参数或文档中粘贴真实密钥。`/effort` 调整 off/low/high/max，并从下一次请求生效；是否支持及实际请求参数由Provider声明，不按模型回复自述判断。
 
 默认交互提示词位于 `src/lynx_agent/config/schema.py`，可通过 `AGENT_SYSTEM_PROMPT` 覆盖；压缩提示词是 `src/lynx_agent/agent/templates/compaction.md`，这是运行资源，不能按普通Markdown文档删除。SOUL/USER/AGENTS来自长期记忆，不是另一套散落的Markdown配置。
