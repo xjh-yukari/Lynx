@@ -5,6 +5,7 @@ import sqlite3
 import sys
 
 from lynx_training_worker.discovery import environment, inspect, plan
+from lynx_training_worker.observe import observe
 from lynx_training_worker.registry import Registry
 
 
@@ -23,6 +24,14 @@ def dispatch(packet):
             or not isinstance(packet["arguments"], dict)):
         raise ValueError("invalid_request")
     operation, arguments = packet["operation"], packet["arguments"]
+    observation = {"progress", "logs", "metrics", "artifacts"}
+    if isinstance(operation, str) and operation in observation:
+        required = {"project_id", "path"} if operation in {"logs", "metrics"} else {"project_id"}
+        optional = {"offset", "limit"} if operation == "logs" else {"offset"} if operation == "artifacts" else set()
+        if not required <= set(arguments) or set(arguments) - required - optional:
+            raise ValueError("invalid_request")
+        project = Registry(packet["root"]).project(arguments["project_id"])
+        return observe(project, operation, arguments)
     expected = {"environment": set(), "projects": set(), "inspect": {"project_id"}, "plan": {"project_id"},
                 "experiments": {"project_id"}, "compare": {"project_id", "experiment_ids"},
                 "register": {"source", "distribution"},

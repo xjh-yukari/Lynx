@@ -2,6 +2,22 @@
 
 已实现基础能力，不是完整训练服务。**不启动训练、不控制现有进程、不支持暂停续训**。没有安装systemd服务，不需要Torch或模型API，使用WSL系统Python标准库。Windows端依赖仓库内bootstrap源码路径，尚不是独立安装包。
 
+已增加只读观察器：独立于通用文件工作区权限，已登记项目可在仅查看模式下重复查询，无需逐条Shell审批；首次注册仍需真实用户确认且不能在暂停/只读状态写台账。不扩大为任意磁盘读取、Shell执行或训练启停授权。
+
+```text
+/training progress <项目ID>
+/training files <项目ID> [分页偏移]
+/training logs <项目ID> run_grpo.log [距文件末尾字节偏移]
+/training metrics <项目ID> outputs/grpo_run/summary.json
+/training metrics <项目ID> outputs/grpo_run/metrics.jsonl
+```
+
+对应模型工具为training_progress、training_artifacts、training_logs、training_metrics，均read_only=True；自然语言提问可由DeepSeek调用、总结。斜杠命令不调用模型，断网也可查询WSL数据。先files找到路径，再logs/metrics；带空格路径加引号。logs默认最新8192字节，next_offset用于向前翻页（增长期间可能重叠）。files每页20条，扫描上限1000节点/4层，列表有截断标志，不保证发现整个项目。
+
+观察器只读取授权项目内.log、stdout.txt、stderr.txt，以及config.json/summary.json/trainer_state.json/metrics.jsonl；模型权重只列元信息，不读正文，不读取数据集、隐藏路径或链接。指标只返回数值及完成标志，不回传原始配置、完整轨迹；JSONL窗口64KiB最多256行，坏行计数并跳过。每项附来源路径、文件时间与采集时间。仅做已知密钥与常见凭据格式脱敏，不承诺全面敏感信息识别。
+
+Linux /proc通过脚本路径关联项目Python进程，返回PID及启动ticks，不回传完整命令/环境；进程存在不证明健康/进度，阶段仅为脚本名推测。模块启动(-m)、无法读取进程信息或无日志的终端打印可能无法识别，返回unknown/partial而不编造。日志、历史summary和活跃进程不自动关联具体实验，不因历史completed就宣布当前任务完成；日志中的Traceback也只是历史异常证据。监测按需采样，尚无持续轮询、自动告警或终端屏幕抓取。已有程序只向TTY打印且没有日志时，不能追溯恢复输出；后续启动请自行同步保存stdout/stderr。本功能不会重启现有程序来补日志。
+
 ## 在当前 Agent 中使用
 
 重启Agent后：

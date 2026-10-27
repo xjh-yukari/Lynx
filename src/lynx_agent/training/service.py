@@ -12,6 +12,9 @@ HELP = (
     "/training environment | projects\n"
     "/training register <WSL源码绝对路径> confirm\n"
     "/training inspect <项目ID> | plan <项目ID> | records <项目ID>\n"
+    "/training progress <项目ID> | files <项目ID> [分页偏移]\n"
+    "/training logs <项目ID> <相对日志路径> [距末尾字节偏移]\n"
+    "/training metrics <项目ID> <相对指标路径>\n"
     "/training compare <项目ID> <基线实验ID> <候选实验ID>\n"
     "/training record <项目ID> <sft/grpo/other> <评测协议名> <指标=数值>... confirm\n"
     "登记值标注为人工报告、未验证；不会冒充已运行训练。路径有空格请加引号。"
@@ -35,7 +38,8 @@ class TrainingService:
     async def read(self, operation, arguments):
         if not self.enabled:
             raise TrainingError("训练助手未开启；使用 /training on confirm")
-        if operation not in {"environment", "projects", "inspect", "plan", "experiments", "compare"}:
+        if operation not in {"environment", "projects", "inspect", "plan", "experiments", "compare",
+                             "progress", "logs", "metrics", "artifacts"}:
             raise TrainingError("M1模型工具仅支持只读发现、计划和查询")
         return await self._request(operation, arguments)
 
@@ -59,13 +63,25 @@ class TrainingService:
             return "训练助手已关闭；不会停止任何已有训练。"
         if parts == ["on", "confirm"]:
             self.enabled = True
-            return "训练助手 M1 已开启；仅环境、已注册项目发现与台账，不会启动训练。"
+            return "训练助手 M1 已开启；支持已授权项目只读监测，无需逐次审批；不会启动训练。"
         if parts[0] in {"submit", "pause", "resume", "cancel"}:
             raise TrainingError("M1尚未实现训练审批、持久调度和框架续训；没有执行任务")
         if not self.enabled:
             raise TrainingError("请先 /training on confirm")
         if len(parts) == 1 and parts[0] in {"environment", "projects"}:
             return self.clean(await self.read(parts[0], {}))
+        if parts[0] in {"progress", "files", "logs", "metrics"}:
+            valid = {"progress": {2}, "files": {2, 3}, "logs": {3, 4}, "metrics": {3}}
+            if len(parts) not in valid[parts[0]]:
+                raise TrainingError(HELP)
+            payload = {"project_id": str(UUID(parts[1]))}
+            if parts[0] in {"logs", "metrics"}:
+                payload["path"] = parts[2]
+            if parts[0] == "files" and len(parts) == 3:
+                payload["offset"] = int(parts[2])
+            if parts[0] == "logs" and len(parts) == 4:
+                payload["offset"] = int(parts[3])
+            return self.clean(await self.read("artifacts" if parts[0] == "files" else parts[0], payload))
         if len(parts) == 2 and parts[0] in {"inspect", "plan", "records"}:
             identifier = str(UUID(parts[1]))
             return self.clean(await self.read("experiments" if parts[0] == "records" else parts[0], {"project_id": identifier}))

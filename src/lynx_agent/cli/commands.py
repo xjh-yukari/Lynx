@@ -39,7 +39,7 @@ HELP_TEXT = """会话命令
   /effort [status/off/low/high/max] TUI 中选择或查看推理强度（下次请求生效）
   /compact         手动压缩旧历史（调用模型，产生 API 费用）
   /tools           查看当前工具和执行限制（不会调用 API）
-  /training        训练助手M1：环境、注册项目、静态发现、人工实验台账与接入计划；不提交训练
+  /training        训练助手M1：只读监测、日志、指标、项目与实验台账；不提交训练
   /mcp [tools]     查看本地 MCP 连接或已注册工具
   /memory          查看长期记忆；list [offset] 查看已存内容，rules 查看保存规则；search/show/remember/forget/preview/approve/reject/pending/changes/undo/reconcile/recall on|off；autosave on|off 开关自动保留
   /profile         查看档案；show soul|user|agents；init；set 类别 内容；reload；changes

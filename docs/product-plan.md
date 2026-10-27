@@ -345,6 +345,10 @@ uv run python tests\manual\demo_tui.py --tools
 
 模型可用training_inspect/status/records/plan/compare五个只读工具；不能自行注册目录、保存指标、提交或控制任务。项目注册与人工登记写入要求文件权限可写、审批不为paused；真实终端的confirm命令是本阶段批准入口。读取仅限显式登记项目，未注册目录不会被扫描。
 
+新增训练只读观察器：`/training progress <项目ID>`采集项目Python进程及最近历史日志/指标；`files <项目ID> [偏移]`分页列产物元信息；`logs <项目ID> <相对路径> [距末尾字节偏移]`读取日志；`metrics <项目ID> <相对路径>`读取数值和完成标志。对应新增training_progress/logs/metrics/artifacts四个只读模型工具，总计九个。DeepSeek可总结采集结果，斜杠命令本身无需模型API。
+
+一次注册授权后，只读监测不受通用工作区路径或可写模式限制，不逐次请求Shell批准；不因此允许读任意文件、跨项目、修改产物或启停训练。仅项目内有界日志/指标读取，权重只列元信息，拒绝隐藏路径、数据集及链接。采集时间、文件时间和来源保留，进程探测与历史文件分开；无进程证据不判定running，历史完成/错误也不冒充当前状态。日志分页和扫描可能截断；无法获取的阶段/步数明确未知，不从GPU占用猜测。按需查询，不是持续监控/自动告警，不能直接抓取其他PowerShell的历史屏幕。操作说明见[worker README](../services/training_worker/README.md)。
+
 默认台账为WSL的`~/lynx-training/registry/experiments.sqlite3`，只有确认注册/登记才建库，环境与空列表查询不创建运行数据。人工记录始终标记user_reported_unverified，缺少代码、数据和训练证据，不能用于证明训练提升。数值差不等于公平实验对比。关闭模块不删除数据库。
 
 M1使用标准库bootstrap短进程，SQLite短事务串行化写入；尚未部署单写者服务、持久调度、训练审批凭据、框架暂停续训、自动改训练项目代码或完整受控比较。普通Shell限额和审批规则不变。调用路径依赖此源码仓库，当前不是可独立分发的worker安装包。接口与目标架构见[技术设计](training-assistant-technical-design.md)，复测与后续训练步骤见[接入计划](../tests/plans/training-onboarding.md)。

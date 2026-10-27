@@ -102,7 +102,7 @@ async def test_model_tools_disabled_by_default_and_cannot_register(tmp_path):
     tools = ToolRegistry(training_tools(service))
     assert not tools.names
     await service.command("on confirm")
-    assert len(tools.names) == 5
+    assert len(tools.names) == 9
     inspect_tool = tools.get("training_inspect")
     with pytest.raises(ToolValidationError):
         inspect_tool.validate_arguments({"mode": "project", "project_id": str(uuid4()), "path": "/home"})

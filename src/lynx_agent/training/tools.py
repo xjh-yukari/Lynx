@@ -21,6 +21,10 @@ class TrainingReadTool(Tool):
             "training_records": "查询指定项目的SQLite人工实验台账。人工数值未自动验证，不是训练执行证明。",
             "training_plan": "为已注册项目生成分阶段接入计划和阻塞项；计划不可执行，不代表训练获批或已运行。",
             "training_compare": "对比同项目两条人工实验记录，只算同协议名的数值差。数据和训练未核验，不能证明效果提升。",
+            "training_progress": "监测已授权项目：读取WSL进程和最近日志/指标。先用training_status找到项目ID。区分历史结果与活跃进程，不猜测当前步数，不执行训练。",
+            "training_logs": "只读分页采集已授权项目日志（.log、stdout.txt、stderr.txt），可交给模型总结阶段/异常。path须为项目内相对路径；offset为距文件末尾字节数，0读取最新。",
+            "training_metrics": "读取项目内summary.json、metrics.jsonl、trainer_state.json、config.json的数值/完成标志，附来源时间。不把历史指标当作当前状态。",
+            "training_artifacts": "列出已授权项目的日志、指标和模型产物元信息，每页20条；不读取权重。先用本工具找到相对path，再读日志/指标。",
         }[name]
 
     @property
@@ -33,6 +37,13 @@ class TrainingReadTool(Tool):
             return {"type": "object", "properties": {}, "additionalProperties": False}
         properties = {"project_id": {"type": "string", "format": "uuid"}}
         required = ["project_id"]
+        if self.name in {"training_logs", "training_metrics"}:
+            properties["path"] = {"type": "string", "description": "项目内相对路径；先用training_artifacts列出"}
+            required.append("path")
+        if self.name in {"training_logs", "training_artifacts"}:
+            properties["offset"] = {"type": "integer", "minimum": 0}
+        if self.name == "training_logs":
+            properties["limit"] = {"type": "integer", "minimum": 1, "maximum": 8192}
         if self.name == "training_compare":
             properties["experiment_ids"] = {"type": "array", "items": {"type": "string", "format": "uuid"},
                                              "minItems": 2, "maxItems": 2, "uniqueItems": True}
@@ -56,6 +67,10 @@ class TrainingReadTool(Tool):
                     return
             if str(UUID(arguments["project_id"])) != arguments["project_id"]:
                 raise ValueError
+            if "offset" in arguments and not 0 <= arguments["offset"] <= (1000 if self.name == "training_artifacts" else 2**53 - 1):
+                raise ValueError
+            if "limit" in arguments and not 1 <= arguments["limit"] <= 8192:
+                raise ValueError
             if self.name == "training_compare":
                 values = arguments["experiment_ids"]
                 if (len(values) != 2 or not all(isinstance(value, str) for value in values)
@@ -67,11 +82,13 @@ class TrainingReadTool(Tool):
     async def execute(self, **arguments):
         self.validate_arguments(arguments)
         operations = {"training_status": "projects", "training_records": "experiments", "training_plan": "plan",
-                      "training_compare": "compare"}
+                      "training_compare": "compare", "training_progress": "progress", "training_logs": "logs",
+                      "training_metrics": "metrics", "training_artifacts": "artifacts"}
         operation = operations.get(self.name, "environment" if arguments.get("mode") == "environment" else "inspect")
         payload = {"project_id": arguments["project_id"]} if "project_id" in arguments else {}
         if "experiment_ids" in arguments:
             payload["experiment_ids"] = arguments["experiment_ids"]
+        payload.update({k: arguments[k] for k in ("path", "offset", "limit") if k in arguments})
         try:
             return self.service.clean(await self.service.read(operation, payload))
         except TrainingError as error:
@@ -80,4 +97,5 @@ class TrainingReadTool(Tool):
 
 def training_tools(service):
     return [TrainingReadTool(service, name) for name in
-            ("training_inspect", "training_status", "training_records", "training_plan", "training_compare")]
+            ("training_inspect", "training_status", "training_records", "training_plan", "training_compare",
+             "training_progress", "training_logs", "training_metrics", "training_artifacts")]

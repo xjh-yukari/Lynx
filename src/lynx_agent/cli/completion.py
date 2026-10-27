@@ -9,7 +9,7 @@ from prompt_toolkit.completion import Completer, Completion
 from lynx_agent.tools.errors import ToolExecutionError
 
 COMMANDS = {
-    "/training": "训练助手M1（环境/项目/实验台账，不提交训练）",
+    "/training": "训练助手M1（只读监测/日志/指标/实验台账，不提交训练）",
     "/shell": "受控本机命令（非沙箱，逐次审批）",
     "/help": "帮助", "/sessions": "搜索和选择会话", "/new": "准备新会话", "/rename": "修改标题",
     "/memory": "长期记忆", "/profile": "档案", "/tools": "工具定义", "/diagnostics": "诊断",
@@ -20,7 +20,7 @@ COMMANDS = {
     "/approve": "批准已预览操作", "/reject": "拒绝候选", "/approvals": "查看审批",
 }
 SUBCOMMANDS = {
-    "/training": ("status", "on confirm", "off", "environment", "projects", "register", "inspect", "plan", "records", "record", "compare"),
+    "/training": ("status", "on confirm", "off", "environment", "projects", "register", "inspect", "plan", "records", "record", "compare", "progress", "logs", "metrics", "files"),
     "/shell": ("status", "on", "on confirm", "off"),
     "/memory": ("list", "rules", "show", "search", "changes", "pending", "autosave on", "autosave off", "recall on", "recall off", "reconcile"),
     "/permissions": ("read", "workspace", "full"), "/search": ("on", "off"),
