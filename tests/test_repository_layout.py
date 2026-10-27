@@ -45,6 +45,7 @@ def test_rag_sample_plans_reference_existing_fixtures():
 @pytest.mark.parametrize("relative", [
     "README.md", "docs/product-plan.md", "tests/README.md", "services/document_rag/README.md",
     "docs/training-assistant-requirements.md",
+    "docs/training-assistant-technical-design.md",
 ])
 def test_maintenance_document_links_exist(relative):
     path = ROOT / relative
