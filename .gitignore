@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+.venv*/
 
 # agent-bench 运行产物（成绩单、trace、录制记录、工作区）
 /results/
@@ -19,8 +20,10 @@ wheels/
 # 本机凭据和配置：保留在磁盘，不进入版本历史。
 .env
 .env.*
+*.env
 !.env.example
 !.env.template
+!*.example.env
 /config.toml
 *.key
 *.pem
@@ -28,8 +31,20 @@ wheels/
 *.pfx
 *.sqlite
 *.sqlite3
+*.sqlite3-*
+*.sqlite-*
 *.db
+*.db-*
 *.log
+/credentials.json
+/secrets.json
+/sessions/
+/memory/
+/rag-data/
+/training-data/
+/volumes/
+/services/document_rag/grants.json
+/services/document_rag/import.json
 
 # 编辑器与测试缓存（不删除本地文件）。
 .idea/

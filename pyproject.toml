@@ -1,8 +1,10 @@
 [project]
 name = "lynx-agent"
 version = "1.0.0"
-description = "Add your description here"
+description = "Lynx Agent: a lightweight personal assistant with a terminal UI, tools, memory and optional document retrieval."
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
 requires-python = ">=3.11"
 dependencies = [
     "aiohttp>=3.14.5,<4",

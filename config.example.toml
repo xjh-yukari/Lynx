@@ -3,7 +3,7 @@
 # 密钥继续放在 .env；MODEL_* 和 DEEPSEEK_MODEL 环境配置优先于当前预设。
 model_preset = "daily"
 
-# 训练助手M1默认关闭：仅发现和台账，尚不提交训练。
+# 训练助手M1默认关闭：环境、只读监测和台账，尚不提交训练。
 [training]
 enabled = false
 distribution = "Ubuntu-24.04"
@@ -41,8 +41,8 @@ context_window_tokens = 65536
 # 启用 Engram 后可选择自动保留普通任务结论；SOUL/USER/AGENTS 仍需人工批准。
 # [memory]
 # enabled = true
-# executable = 'E:\github\lynx_agent_data\bin\engram\3.4.0\engram.exe'
-# data_dir = 'E:\github\lynx_agent_data\memory'
+# executable = 'C:\path\to\engram.exe'
+# data_dir = 'C:\path\to\lynx_agent_data\memory'
 # project_id = 'lynx_agent'
 # auto_save = true
 # auto_save_timeout_seconds = 20
@@ -51,7 +51,7 @@ context_window_tokens = 65536
 # 详见 services/document_rag/README.md。
 # [knowledge]
 # enabled = true
-# policy_file = 'E:\github\lynx_agent_data\rag\grants.json'
+# policy_file = 'C:\path\to\lynx_agent_data\rag\grants.json'
 # server_name = "documents"
 # [mcp.servers.documents]
 # enabled = true
@@ -66,9 +66,9 @@ context_window_tokens = 65536
 # 修改后重启 Agent；这里的服务仅做加法测试，不会保存长期记忆。
 # [mcp.servers.demo]
 # enabled = false
-# command = 'E:\github\nanobot\.venv\Scripts\python.exe'
-# args = ['E:\github\nanobot\tests\mcp\fixture_server.py']
-# cwd = 'E:\github\nanobot'
+# command = 'C:\path\to\lynx-agent\.venv\Scripts\python.exe'
+# args = ['C:\path\to\lynx-agent\tests\mcp\fixture_server.py']
+# cwd = 'C:\path\to\lynx-agent'
 # allowed_tools = ['add']
 # read_only_tools = ['add']
 # allow_write = false

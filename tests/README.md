@@ -75,6 +75,8 @@ Remove-Item Env:LYNX_PRESSURE_TEST
 
 ## DeepSeek 直连回归
 
+公开发布准备：`uv run --locked pytest tests/test_publication.py -q`覆盖新用户示例配置、文档链接、忽略规则以及索引/历史敏感信息检查；扫描器检查`uv run --locked ruff check scripts/check_publication.py`。发布前另运行`uv run --locked python scripts/check_publication.py --history`，不要把自动扫描当作图像或第三方许可人工审查的替代品。
+
 DeepSeek直连回归：`uv run --locked pytest tests/providers/test_deepseek.py -q`；离线验证无效环境代理/证书覆盖不影响模型客户端、环境变量不被改写，以及普通/流式工具协议和关闭连接。自动测试不访问真实API，不消耗模型费用。
 
 ## 训练只读监测补充
